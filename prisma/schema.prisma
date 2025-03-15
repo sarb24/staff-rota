@@ -1,0 +1,60 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  ADMIN
+  MANAGER
+  STAFF
+  USER
+}
+
+model Organization {
+  id        String   @id @default(cuid())
+  name      String
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+  users     User[]
+  shifts    Shift[]
+}
+
+model User {
+  id                String    @id @default(cuid())
+  name             String
+  email            String    @unique
+  password         String
+  role             UserRole  @default(USER)
+  organizationId   String?
+  organization     Organization? @relation(fields: [organizationId], references: [id])
+  emailVerified    DateTime?
+  verificationToken String?
+  resetToken       String?
+  resetTokenExpires DateTime?
+  lastLoginAttempt DateTime?
+  loginAttempts    Int       @default(0)
+  lockedUntil      DateTime?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+  shifts           Shift[]
+
+  @@index([email])
+  @@index([verificationToken])
+  @@index([resetToken])
+}
+
+model Shift {
+  id             String       @id @default(cuid())
+  startTime      DateTime
+  endTime        DateTime
+  user           User         @relation(fields: [userId], references: [id])
+  userId         String
+  organization   Organization @relation(fields: [organizationId], references: [id])
+  organizationId String
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+} 
